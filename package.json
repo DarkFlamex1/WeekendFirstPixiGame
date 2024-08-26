@@ -1,0 +1,23 @@
+{
+  "name": "weekendpixigame",
+  "version": "1.0.0",
+  "description": "Welcome! As the title says, this is a repository holding the remake of one of my first ever platformer game I created in pygame. \r This file iself is a WIP and will be updated with additional information.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack serve --mode development"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pixi.js": "^8.3.4"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  }
+}
