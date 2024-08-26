@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.x/dist/pixi.min.js"></script>
+  </head>
+  <body>
+    <script type="module">
+        // application class creates a renderer, creates a stage & starts the ticker
+        const app = new PIXI.Application({ width: 640, height: 360 });
+
+        // add the canvas to the DOM
+        document.body.appendChild(app.view);
+
+        // create a sprite with a color set
+        let sprite = new PIXI.Sprite(PIXI.Texture.WHITE);
+        sprite.tint = 0xff0000;
+
+        // add the sprite to the stage
+        app.stage.addChild(sprite);
+    </script>
+  </body>
+</html>
