@@ -1,4 +1,3 @@
-//import * as PIXI from 'pixi.js';
 import { Graphics, ObservablePoint, Point, Bounds } from 'pixi.js';
 import { PLAYER_COLOR } from './constants';
 import { InputHandler } from '.';
@@ -32,66 +31,79 @@ export class Player{
     // update - registered to the update loop in the game
     update(deltaTime: number)
     { 
+
+        this.velocity.x = 0;
         // poll the input
         if(InputHandler.isKeyPressed('ArrowDown')){
             this.velocity.y += 5;
         }
         if(InputHandler.isKeyPressed('ArrowUp')){
-            this.velocity.y -= 50;
+            this.velocity.y -= 5;
         }
         if(InputHandler.isKeyPressed('ArrowRight')){
-            this.velocity.x += 5;
+            this.velocity.x = 5;
         }
         if(InputHandler.isKeyPressed('ArrowLeft')){
-            this.velocity.x -= 5;
+            this.velocity.x = -5;
         }
         
-        // example gravity implementation - TODO
+        // example gravity implementation
         this.elapsedTime += deltaTime;
         
+        // apply gravity
         if(this.velocity.y >= 0){
             this.velocity.y += 2 * deltaTime;
         }
 
-        // adjusts based of the level
-        let success = this.collisionDetection();
+        // even though we're adjusting for the collision, when we check for a collision we're using the OLD position
+        // so we should check against this point instead
+        let newPos = new Point(
+            this.point.x + this.velocity.x * deltaTime,
+            this.point.y + this.velocity.y * deltaTime
+        );
+        
+        // adjust the velocity based on the collision
+        let position = this.collisionDetection(newPos);
 
-        console.log(this.velocity, success);
-        let newPos = new Point(this.point.x + this.velocity.x * deltaTime, this.point.y + this.velocity.y * deltaTime);
-
-        this.graphicsObj.position = newPos;
+        this.point = position;
+        this.graphicsObj.position = position;
     }
 
-    // level collision detection
-    collisionDetection(){
+    // level collision detection w/ all entities against the new position
+    collisionDetection(position: Point){
+
+        console.log("position.x: %d, position.y: %d", position.x, position.y);
         // collision detection for the level
-        if(this.point.y > 450){
-            this.point.y = 450;
+        if(position.y > 450){
+            position.y = 450;
+            this.velocity.y = 0;
         }
         if(this.point.y < 0){
-            this.point.y = 0;
+            position.y = 0;
+            this.velocity.y = 0;
         }
         if(this.point.x < 0){
-            this.point.x = 0;
+            position.x = 0;
+            this.velocity.x = 0;
         }
         if(this.point.x > 900){
-            this.point.x = 900;
+            position.x = 900;
+            this.velocity.x = 0;
         }
 
         // check if the bounds of the objects intersect (simple algo, we should do broad phase first using segmentation through a quadtree)
-        let success = false;
         Game.LevelEntities.forEach(element => {
-            success = success || this.intersectBounds(element);
+            position = this.intersectBounds(element, position);
         });
 
-        return success;
+        console.log("Post detection: position.x: %d, position.y: %d", position.x, position.y);
+        return position;
     }
 
-    intersectBounds(object:Graphics){
+    intersectBounds(object:Graphics, playerPos: Point){
         
         let bounds = object.getBounds();      
-        let playerBounds = this.graphicsObj.getBounds();
-        //new Bounds(this.point.x, this.point.y, this.point.x + this.graphicsObj.width, this.point.y + this.graphicsObj.height);
+        let playerBounds = new Bounds(playerPos.x, playerPos.y, playerPos.x + this.graphicsObj.width, playerPos.y + this.graphicsObj.height);
 
         // 
         
@@ -114,41 +126,25 @@ export class Player{
 
         if(playerBounds.left < bounds.right && playerBounds.left > bounds.left && playerBounds.top > bounds.top && playerBounds.top < bounds.bottom){
             console.log("hit on the left", this.elapsedTime);
-            this.point.x = bounds.right;
+            playerPos.x = bounds.right;
             this.velocity.x = 0;
-            return true;
-
+            return playerPos;
         }
         else if(playerBounds.right > bounds.left && playerBounds.right < bounds.right && playerBounds.top > bounds.top && playerBounds.top < bounds.bottom){
             console.log("hit on the right edge");
-            this.point.x = bounds.left - bounds.width;
+            playerPos.x = bounds.left - bounds.width;
             this.velocity.x = 0;
-            return true;
-
+            return playerPos;
         }
         else if(playerBounds.bottom > bounds.top && playerBounds.bottom < bounds.bottom && playerBounds.left < bounds.right && playerBounds.right > bounds.left){
-            console.log("hit", this.elapsedTime);
-            //console.log("plBottom: %d, b.top: %d, b.bottom: %d", playerBounds.bottom, bounds.top, bounds.bottom);
-            this.point.y = bounds.top - bounds.width;           
+            //console.log("hit", this.elapsedTime);
+            playerPos.y = bounds.top - bounds.height;
+            //console.log("plBottom: %d, b.top: %d, b.bottom: %d, playerPos.y: %d", playerBounds.bottom, bounds.top, bounds.bottom, playerPos.y);
             this.velocity.y = 0; 
-            return true;
+            return playerPos;
         }
-        return false;
-        // check the right side - NOT WORKING
-       /*  if(this.graphicsObj.bounds.left < bounds.right && this.graphicsObj.bounds.left > bounds.left && this.graphicsObj.bounds.top > bounds.bottom && this.graphicsObj.bounds.top < bounds.top){
-            console.log("hit right");
-            this.point.x = bounds.right;
-        } */
-
-
-        // collision detection on the top 
-        /* else if(this.point.y > bounds.top - 50 && this.point.x < bounds.right && this.point.x < bounds.left && this.point.y < bounds.bottom)
-        {
-            console.log("top hit" + bounds.top + " " + bounds.right + " " +bounds.left + " " + bounds.bottom)
-            this.point.y = bounds.top - 50;
-        } */
+       
+        return playerPos;
     }
-
-    // process the input and perform collision checks with the entities of the world
 }
 
