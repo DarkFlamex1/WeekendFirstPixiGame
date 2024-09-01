@@ -1,63 +1,42 @@
 // stores the keydown and keyup events for easy access within the game loop
-class InputHandler {
-    private keysPressed: Set<string> = new Set();
+export abstract class InputHandler {
+    private static keysPressed: Set<string> = new Set();
 
-    constructor() {
+    public static register() {
         window.addEventListener('keydown', (e: KeyboardEvent) => {
-            this.keysPressed.add(e.code);
+            InputHandler.keysPressed.add(e.code);
         });
         window.addEventListener('keyup', (e: KeyboardEvent) => {
-            this.keysPressed.delete(e.code);
+            InputHandler.keysPressed.delete(e.code);
         });
     }
 
-    isKeyPressed(key: string): boolean {
-        return this.keysPressed.has(key);
+    public static isKeyPressed(key: string): boolean {
+        return InputHandler.keysPressed.has(key);
     }
 }
 
+// the colors each tile map to
 
 import * as PIXI from 'pixi.js';
+import { Player } from './player';
+import { Game } from './Game';
 
 // application class creates a renderer, creates a stage & starts the ticker
 const app = new PIXI.Application();
 
 // async function to initialize the app
 async function initializeApp() {
-    await app.init({ width: 960, height: 520 });
+    await app.init({ width: 950, height: 500 });
 
-    const inputHandler = new InputHandler();
+    // TODO: setup constants for size, player size, tile size!
+
+    InputHandler.register();
 
     // add the canvas to the DOM
     document.body.appendChild(app.canvas);
 
-    // create the player using the graphics API
-    let graphicsRect = new PIXI.Graphics().rect(0, 0, 50, 50).fill(0xff0000);
-
-    // add the sprite to the stage
-    app.stage.addChild(graphicsRect);
-
-    // oscillate the square
-    let elapsed = 0.0;
-    app.ticker.add((ticker) => {
-        elapsed += ticker.deltaTime;
-        
-        // poll the input
-        if(inputHandler.isKeyPressed('ArrowDown')){
-            graphicsRect.position.y += 5;
-        }
-        if(inputHandler.isKeyPressed('ArrowUp')){
-            graphicsRect.position.y -= 5;
-        }
-        if(inputHandler.isKeyPressed('ArrowRight')){
-            graphicsRect.position.x += 5;
-        }
-        if(inputHandler.isKeyPressed('ArrowLeft')){
-            graphicsRect.position.x -= 5;
-        }
-
-        //graphicsRect.x = 100.0 + Math.sin(elapsed / 20) * 100.0;
-    });
+    let game = new Game(app);
 }
 
 // Call the function to initialize the app
